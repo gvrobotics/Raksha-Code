@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.hardware.CRServo;
 @TeleOp
 public class TeleRK extends OpMode {
     private double powerLX, powerLY, powerRX, powerRY, robotAngle, PowerMultiplier, lf, rb, rf, lb;
+    double cpd = 4;
     private DcMotor FL, BL, FR, BR, Slides, Arm;
     public CRServo Roller;
 
@@ -25,6 +26,23 @@ public class TeleRK extends OpMode {
         Arm = hardwareMap.get(DcMotor.class, "Arm");
 
         Roller = hardwareMap.get(CRServo.class, "Roller");
+
+        //Set brake
+        BR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        BL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        FR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        FL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        Arm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        //Use encoders
+        FR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        FR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        BL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        BL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        FL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        FL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        BR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        BR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         //Set direction
         FR.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -75,6 +93,7 @@ public class TeleRK extends OpMode {
         FL.setPower(lf);
         BR.setPower(rb);
         BL.setPower(lb);
+
 
         //Intake & Outake
 
