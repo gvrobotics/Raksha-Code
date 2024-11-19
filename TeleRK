@@ -1,0 +1,145 @@
+package org.firstinspires.ftc.teamcode;
+
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.CRServo;
+
+@TeleOp
+public class TeleRK extends OpMode {
+    private double powerLX, powerLY, powerRX, powerRY, robotAngle, PowerMultiplier, lf, rb, rf, lb;
+    private DcMotor FL, BL, FR, BR, Slides, Arm;
+    public CRServo Roller;
+
+    @Override
+    public void init() {
+
+        //import all motors & servos
+        BR = hardwareMap.get(DcMotor.class, "BR");
+        BL = hardwareMap.get(DcMotor.class, "BL");
+        FR = hardwareMap.get(DcMotor.class, "FR");
+        FL = hardwareMap.get(DcMotor.class, "FL");
+
+        Slides = hardwareMap.get(DcMotor.class, "Slides1");
+        Arm = hardwareMap.get(DcMotor.class, "Arm");
+
+        Roller = hardwareMap.get(CRServo.class, "Roller");
+
+        //Set direction
+        FR.setDirection(DcMotorSimple.Direction.REVERSE);
+        FL.setDirection(DcMotorSimple.Direction.FORWARD);
+        BR.setDirection(DcMotorSimple.Direction.REVERSE);
+        BL.setDirection(DcMotorSimple.Direction.FORWARD);
+
+        Slides.setDirection(DcMotorSimple.Direction.FORWARD);
+        Arm.setDirection(DcMotorSimple.Direction.FORWARD);
+
+        BR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        BL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        FR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        FL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        //Set power
+        FR.setPower(0);
+        FL.setPower(0);
+        BR.setPower(0);
+        BL.setPower(0);
+
+        Slides.setPower(0);
+        Arm.setPower(0);
+
+        Roller.setPower(0); //Rolling intake
+    }
+
+    @Override
+    public void loop() {
+        //Corresponding to the joysticks
+        powerLX = gamepad1.left_stick_x / 2;
+        powerLY = gamepad1.left_stick_y / 2;
+        powerRX = gamepad1.right_stick_x / 2;
+        powerRY = gamepad1.right_stick_y / 2;
+
+        //Holonomic
+        robotAngle = Math.atan2(powerLX, powerLY);
+        PowerMultiplier = Math.sqrt((Math.pow(powerLX, 2) + Math.pow(powerLY, 2)));
+
+        //wheel power calculations
+        lf = (PowerMultiplier*-1*(Math.sin(robotAngle-(Math.PI/4)))) - powerRX;
+        rb = (PowerMultiplier*-1*(Math.sin(robotAngle-(Math.PI/4)))) + powerRX;
+        lb = (PowerMultiplier*Math.sin(robotAngle+(Math.PI/4))) - powerRX;
+        rf = (PowerMultiplier*Math.sin(robotAngle+(Math.PI/4))) + powerRX;
+
+        //set power to calculated value above
+        FR.setPower(rf);
+        FL.setPower(lf);
+        BR.setPower(rb);
+        BL.setPower(lb);
+
+        //Intake & Outake
+
+        //Slides - dpad
+        //Up
+        if (gamepad2.dpad_up) {
+            Slides.setPower(0.3);
+        } else {
+            Slides.setPower(0);
+
+        //Down
+         if (gamepad2.dpad_down)    {
+           Slides.setPower(-0.3);
+           } else {
+           Slides.setPower(0);
+          }
+
+            //Arm - bumpers
+
+            //up
+            if (gamepad2.right_bumper) {
+                Arm.setPower(0.5);
+            } else {
+                Arm.setPower(0);
+            }
+            //down
+            if (gamepad2.left_bumper) {
+                Arm.setPower(-0.5);
+            } else {
+                Arm.setPower(0);
+            }
+
+            //Roller - letters
+
+            if (gamepad2.x)
+            {
+                Roller.setPower(0.5); //forwards
+            }
+            if (gamepad2.b)
+            {
+                Roller.setPower(-1.0); //backward
+            }
+            if (gamepad2.y)
+            {
+                Roller.setPower(0); //stop the spinning
+            }
+
+
+            //Telemetry
+            telemetry.addData("powerRX: ", gamepad1.right_stick_x);
+            telemetry.addData("powerRY: ", gamepad1.right_stick_y);
+            telemetry.addData("powerLX: ", gamepad1.left_stick_x);
+            telemetry.addData("powerLY: ", gamepad1.left_stick_y);
+
+            telemetry.addData("FR: ", FR.getPower());
+            telemetry.addData("FL: ", FL.getPower());
+            telemetry.addData("BR: ", BR.getPower());
+            telemetry.addData("BL: ", BL.getPower());
+
+            telemetry.addData("Slides1: ", Slides.getPower());
+            telemetry.addData("Slides2: ", Arm.getPower());
+
+            telemetry.addData("Roller: ", Roller.getPower());
+
+            telemetry.update();
+        }
+    }
+}
