@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 @TeleOp
 public class BasicEncodersRK extends OpMode {
     DcMotor Arm; //motor
-    double cpd = 4; //clicks per degree
+    double cpd = 6; //clicks per degree
     double targetPosition, currentPosition; //position values
     int fudge = 15; //increments of 15 degrees
 
