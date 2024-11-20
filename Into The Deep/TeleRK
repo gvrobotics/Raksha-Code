@@ -9,7 +9,8 @@ import com.qualcomm.robotcore.hardware.CRServo;
 @TeleOp
 public class TeleRK extends OpMode {
     private double powerLX, powerLY, powerRX, powerRY, robotAngle, PowerMultiplier, lf, rb, rf, lb;
-    double cpd = 4;
+    //private double cpd = 4;
+    private double cpd = 6;
     private DcMotor FL, BL, FR, BR, Slides, Arm;
     public CRServo Roller;
 
@@ -111,19 +112,21 @@ public class TeleRK extends OpMode {
            Slides.setPower(0);
           }
 
-            //Arm - bumpers
+         //Arm - bumpers
 
-            //up
-            if (gamepad2.right_bumper) {
-                Arm.setPower(0.5);
-            } else {
-                Arm.setPower(0);
-            }
+         //up
+          if (gamepad2.right_bumper) {
+              //int i = (int)(40*cpd)
+             // Arm.setTargetPosition(i);
+         } else {
+              int i = 0;
+             Arm.setTargetPosition(i);
+           }
             //down
             if (gamepad2.left_bumper) {
-                Arm.setPower(-0.5);
+              Arm.setPower(-0.5);
             } else {
-                Arm.setPower(0);
+              Arm.setPower(0);
             }
 
             //Roller - letters
