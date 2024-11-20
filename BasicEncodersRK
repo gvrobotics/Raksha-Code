@@ -1,0 +1,52 @@
+package org.firstinspires.ftc.teamcode;
+
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
+@TeleOp
+public class BasicEncodersRK extends OpMode {
+    DcMotor Arm; //motor
+    double cpd = 4; //clicks per degree
+    double targetPosition, currentPosition; //position values
+    int fudge = 15; //increments of 15 degrees
+
+    @Override
+    public void init() {
+        //initialize motor
+        Arm = hardwareMap.get(DcMotor.class, "motor");
+        Arm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    }
+
+    @Override
+    public void loop() {
+        //set basic positions for the arm
+        //Bumpers - *alter later*
+        if(gamepad1.right_bumper){
+            encoder(160, 0.3);
+        }
+        if(gamepad1.left_bumper) {
+            encoder(0, 0);
+        }
+
+        //increments
+        //Dpad - *alter later*
+        if (gamepad1.dpad_up){
+            currentPosition = Arm.getCurrentPosition();
+            int newPosition = (int) currentPosition+fudge;
+            encoder(newPosition, 0.3);
+        }
+        if (gamepad1.dpad_down){
+            currentPosition = Arm.getCurrentPosition();
+            int newPosition = (int) currentPosition-fudge;
+            encoder(newPosition, 0.3);
+        }
+
+    }
+    public void encoder(int degree, double power){
+        targetPosition = cpd*degree;
+        Arm.setTargetPosition((int)targetPosition);
+        Arm.setPower(power);
+        Arm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+    }
+
+}
