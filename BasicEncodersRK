@@ -13,7 +13,8 @@ public class BasicEncodersRK extends OpMode {
     @Override
     public void init() {
         //initialize motor
-        Arm = hardwareMap.get(DcMotor.class, "motor");
+        Arm = hardwareMap.get(DcMotor.class, "Arm");
+        Arm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         Arm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
@@ -23,10 +24,16 @@ public class BasicEncodersRK extends OpMode {
         //Bumpers - *alter later*
         if(gamepad1.right_bumper){
             encoder(160, 0.3);
+        } else if (!gamepad1.right_bumper) {
+            encoder(0, 0);
         }
         if(gamepad1.left_bumper) {
             encoder(0, 0);
         }
+        if (!Arm.isBusy()) {
+            Arm.setPower(0); // Stop the motor
+        }
+
 
         //increments
         //Dpad - *alter later*
