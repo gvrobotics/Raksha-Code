@@ -1,0 +1,65 @@
+package org.firstinspires.ftc.teamcode;
+
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+
+@TeleOp
+public class RKEncodersTest extends OpMode {
+    DcMotor Arm; //motor
+    double cpd = 4; //clicks per degree
+    double targetPosition, currentPosition, armFudge; //position values
+    int fudge = 15; //increments of 15 degrees
+
+    @Override
+    public void init() {
+        //initialize motor
+        Arm = hardwareMap.get(DcMotor.class, "Arm");
+        Arm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        //Arm.setDirection(DcMotorSimple.Direction.REVERSE);
+        Arm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    }
+
+    @Override
+    public void loop() {
+        //set basic positions for the arm
+        //Bumpers - *alter later*
+        if(gamepad1.right_bumper){
+            encoder(160, 0.3);
+        } else if (!gamepad1.right_bumper && !gamepad1.left_bumper) {
+            encoder(0, 0);
+            Arm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        }
+        if(gamepad1.left_bumper) {
+            encoder(160, -0.3);
+        }
+        if (!Arm.isBusy()) {
+            Arm.setPower(0);
+            Arm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        }
+
+        armFudge = fudge * (gamepad1.right_trigger + (-gamepad1.left_trigger));
+
+        //increments
+        //Dpad - *alter later*
+        if (gamepad1.dpad_up){
+            currentPosition = Arm.getCurrentPosition();
+            int newPosition = (int)(currentPosition+armFudge);
+            encoder(newPosition, 0.3);
+        }
+        if (gamepad1.dpad_down){
+            currentPosition = Arm.getCurrentPosition();
+            int newPosition = (int)(currentPosition-armFudge);
+            encoder(newPosition, -0.3);
+        }
+
+    }
+    public void encoder(int degree, double power){
+        targetPosition = cpd*degree;
+        Arm.setTargetPosition((int)targetPosition);
+        Arm.setPower(power);
+        Arm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+    }
+
+}
