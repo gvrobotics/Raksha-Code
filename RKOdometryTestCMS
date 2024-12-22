@@ -1,0 +1,216 @@
+package org.firstinspires.ftc.teamcode;
+
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+
+@Autonomous(name = "Odometry Test")
+public class RKOdometryTestCMS extends LinearOpMode {
+
+    public DcMotor FR, FL, BR, BL;
+
+    public DcMotor EL, ER, EA;
+
+    @Override
+    public void runOpMode() {
+
+        //hardware initialization
+        FR = hardwareMap.get(DcMotor.class, "front_right_motor");
+        FL = hardwareMap.get(DcMotor.class, "front_left_motor");
+        BR = hardwareMap.get(DcMotor.class, "back_right_motor");
+        BL = hardwareMap.get(DcMotor.class, "back_left_motor");
+
+        BR.setDirection(DcMotorSimple.Direction.REVERSE);
+        BL.setDirection(DcMotorSimple.Direction.FORWARD);
+        FR.setDirection(DcMotorSimple.Direction.REVERSE);
+        FL.setDirection(DcMotorSimple.Direction.FORWARD);
+
+        BR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        BL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        FR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        FL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        //initialize encoders for odometry
+        resetDriveEncoders();
+        FR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        FL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        BR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        BL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        //motor connection to odometry encoders
+        EL = BL;
+        ER = BR;
+        EA = FR;
+
+        telemetry.addData("Status", "Initialized");
+        telemetry.update();
+
+        waitForStart();
+
+        while (opModeIsActive()) {
+            odometry(); //update odometry to track position
+
+            //Do stuff here:
+            moveForward(20, 0.5); //move forward 20cm
+            sleep(1000);
+
+            rotate(90, 0.5); //rotate 90 degrees
+            sleep(1000);
+
+            moveForward(30, 0.8); //Move forward 30cm
+            sleep(1000);
+
+            // Odometry telemetry
+            telemetry.addData("X (cm)", pos.x);
+            telemetry.addData("Y (cm)", pos.y);
+            telemetry.addData("Heading (rad)", pos.h);
+            telemetry.update();
+        }
+
+    }
+
+    public class XyhVector {
+        public double x, y, h;
+        // constructor
+        public XyhVector(double x, double y, double h) {
+            this.x = x;
+            this.y = y;
+            this.h = h;
+        }
+    }
+
+    public void resetDriveEncoders() {
+        BR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        BL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        FR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        FL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+    }
+
+    final static double L = 20.12; //distance between encoder 1 and 2 (cm)
+    final static double B = 11.5; //distance between midpoint of encoder 1 and 2 and 3
+    final static double R = 3.0; //wheel radius (cm)
+    final static double N = 8192; //encoder ticks per revolution, REV Encoder
+    final static double CPT = 2 * Math.PI * R / N;  //cm per tick (distance traveled)
+
+    //keeping track of positions
+    private int CRP = 0; //current right position
+    private int CLP = 0; //current left position
+    private int CAP = 0; //current aux position
+
+    private int ORP = 0; //old right position
+    private int OLP = 0; //old left position
+    private int OAP = 0; //old aux position
+
+    //Odometry
+
+    //n1, n2, n3 = encoders left, right, aux omni-wheels
+    //dn1, dn2, dn3 = difference between encoder values of two reads (at t=1 and t=2)
+    //dx, dy, dtheta = robot movements between two reads
+    //X, Y, Theta = coordinates on the field and the heading of the robot
+
+    //xyhVector = tuple (x, y, h) where h is the heading of the bot
+
+    public XyhVector StartPosition = new XyhVector(213, 102, Math.toRadians(-174));
+    public XyhVector pos = new XyhVector(StartPosition.x, StartPosition.y, StartPosition.h);
+
+    public void odometry() {
+        ORP = CRP;
+        OLP = CLP;
+        OAP = CAP;
+
+        CRP = -ER.getCurrentPosition();
+        CLP = EL.getCurrentPosition();
+        CAP = EA.getCurrentPosition();
+
+        int dn1 = CLP - OLP;
+        int dn2 = CRP - ORP;
+        int dn3 = CAP - OAP;
+
+        //the robot has moved and turned a tiny bit between two measurements:
+        double dtheta = CPT * ((dn2 - dn1) / (L));
+        double dx = CPT * ((dn1 + dn2) / 2.0);
+        double dy = CPT * ((dn3) - ((dn2 - dn1) * B / L));
+
+        //small movement of the robot gets added to the field coordinate system:
+        double theta = pos.h + (dtheta / 2.0);
+        pos.x += dx * Math.cos(theta) - dy * Math.sin(theta);
+        pos.y += dx * Math.sin(theta) + dy * Math.cos(theta);
+        pos.h += dtheta;
+    }
+
+    //movement = testing odometry
+
+
+    //distance in cm
+    public void moveForward(double distance, double speed) {
+        int targetPosition = (int) (distance / CPT); // Convert distance to encoder ticks
+
+        // Reset and set motor modes for running with encoders
+        resetDriveEncoders();
+        FR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        FL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        BR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        BL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        // Set target positions
+        FR.setTargetPosition(targetPosition);
+        FL.setTargetPosition(targetPosition);
+        BR.setTargetPosition(targetPosition);
+        BL.setTargetPosition(targetPosition);
+
+        // Set power for movement
+        FR.setPower(speed);
+        FL.setPower(speed);
+        BR.setPower(speed);
+        BL.setPower(speed);
+
+        // Wait until the robot reaches the target
+        while (opModeIsActive() && (FR.isBusy() || FL.isBusy() || BR.isBusy() || BL.isBusy())) {
+            telemetry.addData("Moving", "Moving forward");
+            telemetry.update();
+        }
+
+        // Stop all motors
+        FR.setPower(0);
+        FL.setPower(0);
+        BR.setPower(0);
+        BL.setPower(0);
+    }
+
+    //angle in degrees
+    public void rotate(double angle, double speed) {
+        int targetPosition = (int) ((angle * N) / (360 * R)); // Convert angle to encoder ticks
+
+        // Reset and set motor modes for running with encoders
+        resetDriveEncoders();
+        FR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        FL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        BR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        BL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        // Set target positions (rotation works by rotating all wheels in the same direction)
+        FR.setTargetPosition(targetPosition);
+        FL.setTargetPosition(-targetPosition);  // Opposite direction for the left side
+        BR.setTargetPosition(targetPosition);
+        BL.setTargetPosition(-targetPosition);  // Opposite direction for the left side
+
+        // Set power for rotation
+        FR.setPower(speed);
+        FL.setPower(speed);
+        BR.setPower(speed);
+        BL.setPower(speed);
+
+        // Wait until the robot reaches the target rotation
+        while (opModeIsActive() && (FR.isBusy() || FL.isBusy() || BR.isBusy() || BL.isBusy())) {
+            telemetry.addData("Rotating", "Rotating to target angle");
+            telemetry.update();
+        }
+
+        // Stop all motors
+        FR.setPower(0);
+        FL.setPower(0);
+        BR.setPower(0);
+        BL.setPower(0);
+    }
+}
