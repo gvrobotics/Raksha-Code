@@ -1,0 +1,81 @@
+package ExtraStorage;
+
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+
+@TeleOp
+public class StrafingTest3 extends OpMode {
+
+    private double powerLX, powerLY, powerRX, powerRY;
+    private double robotAngle, PowerMultiplier;
+    private double lf, rb, rf, lb;
+    private double lx, ly, rx, ry;
+
+    private DcMotor FL, BL, FR, BR;
+
+    @Override
+    public void init() {
+        //Import all motors
+        BR = hardwareMap.get(DcMotor.class, "BR");
+        BL = hardwareMap.get(DcMotor.class, "BL");
+        FR = hardwareMap.get(DcMotor.class, "FR");
+        FL = hardwareMap.get(DcMotor.class, "FL");
+
+        //Set directions
+        FR.setDirection(DcMotorSimple.Direction.REVERSE);
+        FL.setDirection(DcMotorSimple.Direction.FORWARD);
+        BR.setDirection(DcMotorSimple.Direction.REVERSE);
+        BL.setDirection(DcMotorSimple.Direction.FORWARD);
+
+        BR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        BL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        FR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        FL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        FR.setPower(0);
+        FL.setPower(0);
+        BR.setPower(0);
+        BL.setPower(0);
+    }
+
+    @Override
+    public void loop() {
+
+        //Get values from controller
+        powerLX = gamepad1.left_stick_x / 2; // Strafing
+        powerLY = gamepad1.left_stick_y / 2; // Forward/backward
+        powerRX = gamepad1.right_stick_x / 2; // Turning
+
+        //Holonomic drive calculations
+        robotAngle = Math.atan2(powerLX, powerLY);
+        PowerMultiplier = Math.sqrt(Math.pow(powerLX, 2) + Math.pow(powerLY, 2));
+
+        //Calculate motor powers
+        lf = (PowerMultiplier * -1 * (Math.sin(robotAngle - (Math.PI / 4)))) - powerRX;
+        rb = (PowerMultiplier * -1 * (Math.sin(robotAngle - (Math.PI / 4)))) + powerRX;
+        lb = (PowerMultiplier * Math.sin(robotAngle + (Math.PI / 4))) - powerRX;
+        rf = (PowerMultiplier * Math.sin(robotAngle + (Math.PI / 4))) + powerRX;
+
+        //Apply motor powers
+        FL.setPower(lf);
+        FR.setPower(rf);
+        BL.setPower(lb);
+        BR.setPower(rb);
+
+        //Telemetry
+        telemetry.addData("powerRX: ", gamepad1.right_stick_x);
+        telemetry.addData("powerRY: ", gamepad1.right_stick_y);
+        telemetry.addData("powerLX: ", gamepad1.left_stick_x);
+        telemetry.addData("powerLY: ", gamepad1.left_stick_y);
+
+        telemetry.addData("FR: ", FR.getPower());
+        telemetry.addData("FL: ", FL.getPower());
+        telemetry.addData("BR: ", BR.getPower());
+        telemetry.addData("BL: ", BL.getPower());
+
+        telemetry.update();
+    }
+
+}
