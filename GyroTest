@@ -1,0 +1,68 @@
+package org.firstinspires.ftc.teamcode;
+
+import com.qualcomm.hardware.bosch.BNO055IMU;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+
+@Autonomous
+public class GyroTest extends LinearOpMode {
+
+    private BNO055IMU imu;
+    private Orientation angles;
+
+    @Override
+    public void runOpMode() throws InterruptedException {
+        // Initialize the IMU
+        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
+        parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
+        parameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
+
+        try {
+            imu = hardwareMap.get(BNO055IMU.class, "imu");
+            imu.initialize(parameters);
+        } catch (Exception e) {
+            telemetry.addData("Error", "IMU initialization failed: %s", e.getMessage());
+            telemetry.update();
+            return;
+        }
+
+        telemetry.addLine("IMU calibrating...");
+        telemetry.update();
+
+        // Wait for IMU to finish calibrating with a timeout
+        long startTime = System.currentTimeMillis();
+        while (!isStopRequested() && !imu.isGyroCalibrated() && (System.currentTimeMillis() - startTime < 5000)) {
+            telemetry.addLine("IMU calibrating...");
+            telemetry.update();
+            sleep(50);
+        }
+
+        if (!imu.isGyroCalibrated()) {
+            telemetry.addLine("IMU Calibration failed or timed out.");
+            telemetry.update();
+            return;
+        }
+
+        telemetry.addLine("IMU calibration complete.");
+        telemetry.update();
+
+        waitForStart();
+
+        while (opModeIsActive()) {
+            // Get angular orientation
+            angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+
+            // Display telemetry data
+            telemetry.addData("Heading (Z)", angles.firstAngle);
+            telemetry.addData("Roll (Y)", angles.secondAngle);
+            telemetry.addData("Pitch (X)", angles.thirdAngle);
+            telemetry.update();
+
+            sleep(100);
+        }
+    }
+}
