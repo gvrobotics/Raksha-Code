@@ -1,3 +1,6 @@
+//DO NOT USE
+//ACTIVATES EMERGENCY STOP
+
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
