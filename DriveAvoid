@@ -1,0 +1,177 @@
+// Simple autonomous program that drives bot forward until the period ends
+// or the touch sensor is activated. If activated, the robot backs up, turns 90°,
+// and continues moving. Demonstrates obstacle avoidance using the REV Hub's IMU.
+// Gamepad buttons simulate touch sensor press for testing and support turning both left and right.
+
+package org.firstinspires.ftc.teamcode;
+
+import com.qualcomm.hardware.bosch.BNO055IMU;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.TouchSensor;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+
+@Autonomous(name = "Drive Avoid IMU", group = "Exercises")
+public class DriveAvoidImu extends LinearOpMode {
+
+    //motors and sensors
+    private DcMotor FL, FR, BL, BR;
+    private TouchSensor touch;
+    private BNO055IMU imu; //initialize imu 
+
+    //IMU and movement variables
+    private Orientation lastAngles = new Orientation();
+    private double globalAngle;
+    private double correction;
+    private double power = 0.30; //default driving power
+
+    @Override
+    public void runOpMode() {
+      
+        //hardware initilization
+        try {
+            FL = hardwareMap.dcMotor.get("FL");
+            FR = hardwareMap.dcMotor.get("FR");
+            BL = hardwareMap.dcMotor.get("BL");
+            BR = hardwareMap.dcMotor.get("BR");
+            touch = hardwareMap.get(TouchSensor.class, "touch");
+            imu = hardwareMap.get(BNO055IMU.class, "imu");
+
+            //motor configuration
+            BR.setDirection(DcMotorSimple.Direction.FORWARD);
+            BL.setDirection(DcMotorSimple.Direction.REVERSE);
+            FR.setDirection(DcMotorSimple.Direction.FORWARD);
+            FL.setDirection(DcMotorSimple.Direction.FORWARD);
+
+            BR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            BL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            FR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            FL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+            //IMU initialization
+            BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
+            parameters.mode = BNO055IMU.SensorMode.IMU;
+            parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
+            parameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
+            imu.initialize(parameters);
+
+            telemetry.addData("Status", "IMU initializing...");
+            telemetry.update();
+            while (!isStopRequested() && !imu.isGyroCalibrated()) {
+                sleep(50);
+                idle();
+            }
+        } catch (Exception e) {
+            telemetry.addData("Error", "Initialization failed: " + e.getMessage());
+            telemetry.update();
+            return;
+        }
+
+        telemetry.addData("Status", "Waiting for start");
+        telemetry.update();
+        waitForStart();
+
+        //autonomous loop
+        while (opModeIsActive()) {
+            //drive forward and adjust for drift
+            correction = checkDirection();
+            FL.setPower(power - correction);
+            FR.setPower(power + correction);
+            BL.setPower(power - correction);
+            BR.setPower(power + correction);
+
+            telemetry.addData("IMU Heading", lastAngles.firstAngle);
+            telemetry.addData("Correction", correction);
+            telemetry.update();
+
+            //check for obstacle or simulated touch
+            if (touch.isPressed() || gamepad1.a || gamepad1.b) {
+                avoidObstacle(gamepad1.b);
+            }
+        }
+        
+        stopMotors();
+    }
+
+    /**
+     * Adjusts the driving direction based on IMU readings.
+     * @return Correction value to maintain a straight path
+     */
+    private double checkDirection() {
+        double angle = getAngle();
+        return angle == 0 ? 0 : -angle * 0.10; //gain factor
+    }
+
+    /**
+     * Calculates the current angle based on IMU readings.
+     * @return Cumulative angle from the last reset
+     */
+    private double getAngle() {
+        Orientation angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+        double deltaAngle = angles.firstAngle - lastAngles.firstAngle;
+
+        if (deltaAngle < -180) deltaAngle += 360;
+        else if (deltaAngle > 180) deltaAngle -= 360;
+
+        globalAngle += deltaAngle;
+        lastAngles = angles;
+        return globalAngle;
+    }
+
+    /**
+     * Resets the IMU's angle tracking.
+     */
+    private void resetAngle() {
+        lastAngles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+        globalAngle = 0;
+    }
+
+    /**
+     * Handles obstacle avoidance by stopping, backing up, and rotating.
+     * @param turnLeft True to turn left; otherwise, turns right
+     */
+    private void avoidObstacle(boolean turnLeft) {
+        stopMotors();
+        sleep(500);
+        
+        rotate(turnLeft ? 90 : -90, power);
+    }
+
+    /**
+     * Rotate the robot by a specified number of degrees.
+     * @param degrees Degrees to rotate; positive = left, negative = right
+     * @param power   Power for rotation
+     */
+    private void rotate(int degrees, double power) {
+        resetAngle();
+
+        double leftPower = degrees > 0 ? -power : power;
+        double rightPower = -leftPower;
+
+        FL.setPower(leftPower);
+        FR.setPower(rightPower);
+        BL.setPower(leftPower);
+        BR.setPower(rightPower);
+
+        while (opModeIsActive() && Math.abs(getAngle()) < Math.abs(degrees)) {
+            telemetry.addData("Rotating", "Angle: %.2f", getAngle());
+            telemetry.update();
+        }
+
+        stopMotors();
+        sleep(500); //stablize
+    }
+
+
+    private void stopMotors() {
+        FL.setPower(0);
+        FR.setPower(0);
+        BL.setPower(0);
+        BR.setPower(0);
+    }
+}
