@@ -1,0 +1,653 @@
+package org.firstinspires.ftc.teamcode;
+
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
+
+@Autonomous (name = "Red Auton", group = "Auton")
+public class RedAuton extends LinearOpMode {
+
+    // Encoder values
+    double cpi = 60;
+    double cpd = 29;
+
+    public DcMotor BR, BL, FR, FL, spin1, spin2;
+    private Servo flip;
+    private ElapsedTime timer = new ElapsedTime();
+    private Boolean t = false;
+
+    // Enum to define possible robot turning directions
+    public enum robotMotion {
+        right, left;
+    }
+
+    @Override
+    public void runOpMode() throws InterruptedException {
+        BR = hardwareMap.get(DcMotor.class, "BR");
+        BL = hardwareMap.get(DcMotor.class, "BL");
+        FR = hardwareMap.get(DcMotor.class, "FR");
+        FL = hardwareMap.get(DcMotor.class, "FL");
+        spin1 = hardwareMap.get(DcMotor.class, "s1");
+        spin2 = hardwareMap.get(DcMotor.class, "s2");
+        flip = hardwareMap.get(Servo.class, "f");
+
+        BR.setDirection(DcMotorSimple.Direction.FORWARD);
+        BL.setDirection(DcMotorSimple.Direction.REVERSE);
+        FR.setDirection(DcMotorSimple.Direction.FORWARD);
+        FL.setDirection(DcMotorSimple.Direction.REVERSE);
+        spin1.setDirection(DcMotorSimple.Direction.FORWARD);
+        spin2.setDirection(DcMotorSimple.Direction.REVERSE);
+        flip.setDirection(Servo.Direction.FORWARD);
+
+        BR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        BL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        FR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        FL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        spin1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        spin2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        // Encoder setup
+        // RUN_USING_ENCODER allows for precise speed control using encoders
+        // STOP_AND_RESET_ENCODER sets current position to zero, preparing for movement
+        BR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        BR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        BL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        BL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        FR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        FR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        FL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        FL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        // Set initial power to zero to ensure robot does not move before starting
+        BR.setPower(0);
+        BL.setPower(0);
+        FR.setPower(0);
+        FL.setPower(0);
+        spin1.setPower(0);
+        spin2.setPower(0);
+        flip.setPosition(0);
+
+        // Recommended power values for different movements:
+        // Forward/backward: 0.5 (50% of full speed for control)
+        // Strafe left/right: 0.5 (moderate speed to prevent slipping)
+        // Turns: 0.3 (slower for precision and stability)
+
+        // Wait for start button
+        waitForStart();
+
+        // Autonomous sequence
+        //strafeRight(8,0.5);
+        //sleep(200);package org.firstinspires.ftc.teamcode;
+        //
+        //import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+        //import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+        //import com.qualcomm.robotcore.hardware.DcMotor;
+        //import com.qualcomm.robotcore.hardware.DcMotorSimple;
+        //import com.qualcomm.robotcore.hardware.Servo;
+        //import com.qualcomm.robotcore.util.ElapsedTime;
+        //
+        //@Autonomous (name = "Red Auton", group = "Auton")
+        //public class RedAuton extends LinearOpMode {
+        //
+        //    // Encoder values
+        //    double cpi = 60;
+        //    double cpd = 29;
+        //
+        //    public DcMotor BR, BL, FR, FL, spin1, spin2;
+        //    private Servo flip;
+        //    private ElapsedTime timer = new ElapsedTime();
+        //    private Boolean t = false;
+        //
+        //    // Enum to define possible robot turning directions
+        //    public enum robotMotion {
+        //        right, left;
+        //    }
+        //
+        //    @Override
+        //    public void runOpMode() throws InterruptedException {
+        //        BR = hardwareMap.get(DcMotor.class, "BR");
+        //        BL = hardwareMap.get(DcMotor.class, "BL");
+        //        FR = hardwareMap.get(DcMotor.class, "FR");
+        //        FL = hardwareMap.get(DcMotor.class, "FL");
+        //        spin1 = hardwareMap.get(DcMotor.class, "s1");
+        //        spin2 = hardwareMap.get(DcMotor.class, "s2");
+        //        flip = hardwareMap.get(Servo.class, "f");
+        //
+        //        BR.setDirection(DcMotorSimple.Direction.FORWARD);
+        //        BL.setDirection(DcMotorSimple.Direction.REVERSE);
+        //        FR.setDirection(DcMotorSimple.Direction.FORWARD);
+        //        FL.setDirection(DcMotorSimple.Direction.REVERSE);
+        //        spin1.setDirection(DcMotorSimple.Direction.FORWARD);
+        //        spin2.setDirection(DcMotorSimple.Direction.REVERSE);
+        //        flip.setDirection(Servo.Direction.FORWARD);
+        //
+        //        BR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        //        BL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        //        FR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        //        FL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        //        spin1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        //        spin2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        //
+        //        // Encoder setup
+        //        // RUN_USING_ENCODER allows for precise speed control using encoders
+        //        // STOP_AND_RESET_ENCODER sets current position to zero, preparing for movement
+        //        BR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        //        BR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        //
+        //        BL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        //        BL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        //
+        //        FR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        //        FR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        //
+        //        FL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        //        FL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        //
+        //        // Set initial power to zero to ensure robot does not move before starting
+        //        BR.setPower(0);
+        //        BL.setPower(0);
+        //        FR.setPower(0);
+        //        FL.setPower(0);
+        //        spin1.setPower(0);
+        //        spin2.setPower(0);
+        //        flip.setPosition(0);
+        //
+        //        // Recommended power values for different movements:
+        //        // Forward/backward: 0.5 (50% of full speed for control)
+        //        // Strafe left/right: 0.5 (moderate speed to prevent slipping)
+        //        // Turns: 0.3 (slower for precision and stability)
+        //
+        //        // Wait for start button
+        //        waitForStart();
+        //
+        //        // Autonomous sequence
+        //        //strafeRight(8,0.5);
+        //        //sleep(200);
+        //
+        //        backward(35, 0.3);
+        //        sleep(200);
+        //
+        //        //shooter(0.45, 3);
+        //        //sleep(300);
+        //
+        //        strafeRight(13, 0.5);
+        //    }
+        //
+        //    private void shooter(double power, int numShots) {
+        //        spin1.setPower(power);
+        //        spin2.setPower(power);
+        //
+        //        // Give time to spin up
+        //        sleep(800);
+        //
+        //        // Fire sequence
+        //        for (int i = 0; i < numShots; i++) {
+        //            flip.setPosition(0.2);
+        //            sleep(1000);
+        //            flip.setPosition(0);
+        //            sleep(1000);
+        //        }
+        //
+        //        // Stop shooter
+        //        spin1.setPower(0);
+        //        spin2.setPower(0);
+        //    }
+        //
+        //    // Function to move robot forward
+        //    private void forward(double inch, double power) {
+        //        // Target positions calculated by current position + inches * cycles per inch
+        //        // This converts linear distance into encoder ticks
+        //        int a = (int)(BR.getCurrentPosition() + (inch * cpi));
+        //        int b = (int)(BL.getCurrentPosition() + (inch * cpi));
+        //        int c = (int)(FR.getCurrentPosition() + (inch * cpi));
+        //        int d = (int)(FL.getCurrentPosition() + (inch * cpi));
+        //
+        //        // Set each motor's target position
+        //        BR.setTargetPosition(a);
+        //        BL.setTargetPosition(b);
+        //        FR.setTargetPosition(c);
+        //        FL.setTargetPosition(d);
+        //
+        //        // Apply same power to all motors for straight movement
+        //        BR.setPower(power);
+        //        BL.setPower(power);
+        //        FR.setPower(power);
+        //        FL.setPower(power);
+        //
+        //        // RUN_TO_POSITION mode automatically moves motors to their target positions
+        //        BR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        //        BL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        //        FR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        //        FL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        //
+        //        // Telemetry loop to monitor progress
+        //        // isBusy() returns true until motor reaches target
+        //        while (BR.isBusy() && BL.isBusy() && FR.isBusy() && FL.isBusy()) {
+        //            telemetry.addLine("Moving Forward");
+        //            telemetry.addData("BR Target", a);
+        //            telemetry.addData("BL Target", b);
+        //            telemetry.addData("FR Target", c);
+        //            telemetry.addData("FL Target", d);
+        //            telemetry.addData("BR Current", BR.getCurrentPosition());
+        //            telemetry.addData("BL Current", BL.getCurrentPosition());
+        //            telemetry.addData("FR Current", FR.getCurrentPosition());
+        //            telemetry.addData("FL Current", FL.getCurrentPosition());
+        //            telemetry.update();
+        //        }
+        //
+        //        // Stop motors after reaching target
+        //        BR.setPower(0);
+        //        BL.setPower(0);
+        //        FR.setPower(0);
+        //        FL.setPower(0);
+        //    }
+        //
+        //    // Function to move robot backward
+        //    private void backward(double inch, double power) {
+        //        // Same calculation as forward, but subtracting ticks to move backward
+        //        int a = (int)(BR.getCurrentPosition() - (inch * cpi));
+        //        int b = (int)(BL.getCurrentPosition() - (inch * cpi));
+        //        int c = (int)(FR.getCurrentPosition() - (inch * cpi));
+        //        int d = (int)(FL.getCurrentPosition() - (inch * cpi));
+        //
+        //        BR.setTargetPosition(a);
+        //        BL.setTargetPosition(b);
+        //        FR.setTargetPosition(c);
+        //        FL.setTargetPosition(d);
+        //
+        //        BR.setPower(-power);
+        //        BL.setPower(-power);
+        //        FR.setPower(-power);
+        //        FL.setPower(-power);
+        //
+        //        BR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        //        BL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        //        FR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        //        FL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        //
+        //        while (BR.isBusy() && BL.isBusy() && FR.isBusy() && FL.isBusy()) {
+        //            telemetry.addLine("Moving Backward");
+        //            telemetry.addData("BR Target", a);
+        //            telemetry.addData("BL Target", b);
+        //            telemetry.addData("FR Target", c);
+        //            telemetry.addData("FL Target", d);
+        //            telemetry.addData("BR Current", BR.getCurrentPosition());
+        //            telemetry.addData("BL Current", BL.getCurrentPosition());
+        //            telemetry.addData("FR Current", FR.getCurrentPosition());
+        //            telemetry.addData("FL Current", FL.getCurrentPosition());
+        //            telemetry.update();
+        //        }
+        //
+        //        BR.setPower(0);
+        //        BL.setPower(0);
+        //        FR.setPower(0);
+        //        FL.setPower(0);
+        //    }
+        //
+        //    // Function to strafe left using mecanum wheel logic
+        //    private void strafeRight(double inch, double power) {
+        //        // For mecanum wheels:
+        //        // Front Left & Back Right move backward, Front Right & Back Left move forward
+        //        BR.setTargetPosition((int)(BR.getCurrentPosition() - inch * cpi));
+        //        BL.setTargetPosition((int)(BL.getCurrentPosition() + inch * cpi));
+        //        FR.setTargetPosition((int)(FR.getCurrentPosition() + inch * cpi));
+        //        FL.setTargetPosition((int)(FL.getCurrentPosition() - inch * cpi));
+        //
+        //        // Motor powers must match the direction of rotation to achieve diagonal movement
+        //        BR.setPower(-power);
+        //        BL.setPower(power);
+        //        FR.setPower(power);
+        //        FL.setPower(-power);
+        //
+        //        BR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        //        BL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        //        FR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        //        FL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        //
+        //        while (BR.isBusy() && BL.isBusy() && FR.isBusy() && FL.isBusy()) {
+        //            telemetry.addLine("Strafing Left");
+        //            telemetry.addData("BR Current", BR.getCurrentPosition());
+        //            telemetry.addData("BL Current", BL.getCurrentPosition());
+        //            telemetry.addData("FR Current", FR.getCurrentPosition());
+        //            telemetry.addData("FL Current", FL.getCurrentPosition());
+        //            telemetry.update();
+        //        }
+        //
+        //        BR.setPower(0);
+        //        BL.setPower(0);
+        //        FR.setPower(0);
+        //        FL.setPower(0);
+        //    }
+        //
+        //    // Function to strafe right
+        //    private void strafeLeft(double inch, double power) {
+        //        // Opposite of strafeLeft
+        //        BR.setTargetPosition((int)(BR.getCurrentPosition() + inch * cpi));
+        //        BL.setTargetPosition((int)(BL.getCurrentPosition() - inch * cpi));
+        //        FR.setTargetPosition((int)(FR.getCurrentPosition() - inch * cpi));
+        //        FL.setTargetPosition((int)(FL.getCurrentPosition() + inch * cpi));
+        //
+        //        BR.setPower(power);
+        //        BL.setPower(-power);
+        //        FR.setPower(-power);
+        //        FL.setPower(power);
+        //
+        //        BR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        //        BL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        //        FR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        //        FL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        //
+        //        while (BR.isBusy() && BL.isBusy() && FR.isBusy() && FL.isBusy()) {
+        //            telemetry.addLine("Strafing Right");
+        //            telemetry.addData("BR Current", BR.getCurrentPosition());
+        //            telemetry.addData("BL Current", BL.getCurrentPosition());
+        //            telemetry.addData("FR Current", FR.getCurrentPosition());
+        //            telemetry.addData("FL Current", FL.getCurrentPosition());
+        //            telemetry.update();
+        //        }
+        //
+        //        BR.setPower(0);
+        //        BL.setPower(0);
+        //        FR.setPower(0);
+        //        FL.setPower(0);
+        //    }
+        //
+        //    // Function to turn robot right or left
+        //    private void movementRL(robotMotion action, double degree, double power) {
+        //        // Turning uses left and right wheels moving in opposite directions
+        //        if (action == robotMotion.left) {
+        //            // Left turn: left wheels backward, right wheels forward
+        //            BR.setTargetPosition((int)(BR.getCurrentPosition() + degree * cpd));
+        //            BL.setTargetPosition((int)(BL.getCurrentPosition() - degree * cpd));
+        //            FR.setTargetPosition((int)(FR.getCurrentPosition() + degree * cpd));
+        //            FL.setTargetPosition((int)(FL.getCurrentPosition() - degree * cpd));
+        //
+        //            BR.setPower(power);
+        //            BL.setPower(-power);
+        //            FR.setPower(power);
+        //            FL.setPower(-power);
+        //        }
+        //
+        //        if (action == robotMotion.right) {
+        //            // Right turn: left wheels forward, right wheels backward
+        //            BR.setTargetPosition((int)(BR.getCurrentPosition() - degree * cpd));
+        //            BL.setTargetPosition((int)(BL.getCurrentPosition() + degree * cpd));
+        //            FR.setTargetPosition((int)(FR.getCurrentPosition() - degree * cpd));
+        //            FL.setTargetPosition((int)(FL.getCurrentPosition() + degree * cpd));
+        //
+        //            BR.setPower(-power);
+        //            BL.setPower(power);
+        //            FR.setPower(-power);
+        //            FL.setPower(power);
+        //        }
+        //
+        //        // Set RUN_TO_POSITION mode for all wheels
+        //        BR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        //        BL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        //        FR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        //        FL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        //
+        //        // Wait until all motors finish movement
+        //        while (BR.isBusy() && BL.isBusy() && FR.isBusy() && FL.isBusy()) {
+        //            telemetry.addLine("Turning " + action.toString());
+        //            telemetry.addData("BR Current", BR.getCurrentPosition());
+        //            telemetry.addData("BL Current", BL.getCurrentPosition());
+        //            telemetry.addData("FR Current", FR.getCurrentPosition());
+        //            telemetry.addData("FL Current", FL.getCurrentPosition());
+        //            telemetry.update();
+        //        }
+        //
+        //        // Stop all motors after turning
+        //        BR.setPower(0);
+        //        BL.setPower(0);
+        //        FR.setPower(0);
+        //        FL.setPower(0);
+        //    }
+        //}
+
+        backward(35, 0.3);
+        sleep(200);
+
+        //shooter(0.45, 3);
+        //sleep(300);
+
+        strafeRight(13, 0.5);
+    }
+
+    private void shooter(double power, int numShots) {
+        spin1.setPower(power);
+        spin2.setPower(power);
+
+        // Give time to spin up
+        sleep(800);
+
+        // Fire sequence
+        for (int i = 0; i < numShots; i++) {
+            flip.setPosition(0.2);
+            sleep(1000);
+            flip.setPosition(0);
+            sleep(1000);
+        }
+
+        // Stop shooter
+        spin1.setPower(0);
+        spin2.setPower(0);
+    }
+
+    // Function to move robot forward
+    private void forward(double inch, double power) {
+        // Target positions calculated by current position + inches * cycles per inch
+        // This converts linear distance into encoder ticks
+        int a = (int)(BR.getCurrentPosition() + (inch * cpi));
+        int b = (int)(BL.getCurrentPosition() + (inch * cpi));
+        int c = (int)(FR.getCurrentPosition() + (inch * cpi));
+        int d = (int)(FL.getCurrentPosition() + (inch * cpi));
+
+        // Set each motor's target position
+        BR.setTargetPosition(a);
+        BL.setTargetPosition(b);
+        FR.setTargetPosition(c);
+        FL.setTargetPosition(d);
+
+        // Apply same power to all motors for straight movement
+        BR.setPower(power);
+        BL.setPower(power);
+        FR.setPower(power);
+        FL.setPower(power);
+
+        // RUN_TO_POSITION mode automatically moves motors to their target positions
+        BR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        BL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        FR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        FL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        // Telemetry loop to monitor progress
+        // isBusy() returns true until motor reaches target
+        while (BR.isBusy() && BL.isBusy() && FR.isBusy() && FL.isBusy()) {
+            telemetry.addLine("Moving Forward");
+            telemetry.addData("BR Target", a);
+            telemetry.addData("BL Target", b);
+            telemetry.addData("FR Target", c);
+            telemetry.addData("FL Target", d);
+            telemetry.addData("BR Current", BR.getCurrentPosition());
+            telemetry.addData("BL Current", BL.getCurrentPosition());
+            telemetry.addData("FR Current", FR.getCurrentPosition());
+            telemetry.addData("FL Current", FL.getCurrentPosition());
+            telemetry.update();
+        }
+
+        // Stop motors after reaching target
+        BR.setPower(0);
+        BL.setPower(0);
+        FR.setPower(0);
+        FL.setPower(0);
+    }
+
+    // Function to move robot backward
+    private void backward(double inch, double power) {
+        // Same calculation as forward, but subtracting ticks to move backward
+        int a = (int)(BR.getCurrentPosition() - (inch * cpi));
+        int b = (int)(BL.getCurrentPosition() - (inch * cpi));
+        int c = (int)(FR.getCurrentPosition() - (inch * cpi));
+        int d = (int)(FL.getCurrentPosition() - (inch * cpi));
+
+        BR.setTargetPosition(a);
+        BL.setTargetPosition(b);
+        FR.setTargetPosition(c);
+        FL.setTargetPosition(d);
+
+        BR.setPower(-power);
+        BL.setPower(-power);
+        FR.setPower(-power);
+        FL.setPower(-power);
+
+        BR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        BL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        FR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        FL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        while (BR.isBusy() && BL.isBusy() && FR.isBusy() && FL.isBusy()) {
+            telemetry.addLine("Moving Backward");
+            telemetry.addData("BR Target", a);
+            telemetry.addData("BL Target", b);
+            telemetry.addData("FR Target", c);
+            telemetry.addData("FL Target", d);
+            telemetry.addData("BR Current", BR.getCurrentPosition());
+            telemetry.addData("BL Current", BL.getCurrentPosition());
+            telemetry.addData("FR Current", FR.getCurrentPosition());
+            telemetry.addData("FL Current", FL.getCurrentPosition());
+            telemetry.update();
+        }
+
+        BR.setPower(0);
+        BL.setPower(0);
+        FR.setPower(0);
+        FL.setPower(0);
+    }
+
+    // Function to strafe left using mecanum wheel logic
+    private void strafeRight(double inch, double power) {
+        // For mecanum wheels:
+        // Front Left & Back Right move backward, Front Right & Back Left move forward
+        BR.setTargetPosition((int)(BR.getCurrentPosition() - inch * cpi));
+        BL.setTargetPosition((int)(BL.getCurrentPosition() + inch * cpi));
+        FR.setTargetPosition((int)(FR.getCurrentPosition() + inch * cpi));
+        FL.setTargetPosition((int)(FL.getCurrentPosition() - inch * cpi));
+
+        // Motor powers must match the direction of rotation to achieve diagonal movement
+        BR.setPower(-power);
+        BL.setPower(power);
+        FR.setPower(power);
+        FL.setPower(-power);
+
+        BR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        BL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        FR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        FL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        while (BR.isBusy() && BL.isBusy() && FR.isBusy() && FL.isBusy()) {
+            telemetry.addLine("Strafing Left");
+            telemetry.addData("BR Current", BR.getCurrentPosition());
+            telemetry.addData("BL Current", BL.getCurrentPosition());
+            telemetry.addData("FR Current", FR.getCurrentPosition());
+            telemetry.addData("FL Current", FL.getCurrentPosition());
+            telemetry.update();
+        }
+
+        BR.setPower(0);
+        BL.setPower(0);
+        FR.setPower(0);
+        FL.setPower(0);
+    }
+
+    // Function to strafe right
+    private void strafeLeft(double inch, double power) {
+        // Opposite of strafeLeft
+        BR.setTargetPosition((int)(BR.getCurrentPosition() + inch * cpi));
+        BL.setTargetPosition((int)(BL.getCurrentPosition() - inch * cpi));
+        FR.setTargetPosition((int)(FR.getCurrentPosition() - inch * cpi));
+        FL.setTargetPosition((int)(FL.getCurrentPosition() + inch * cpi));
+
+        BR.setPower(power);
+        BL.setPower(-power);
+        FR.setPower(-power);
+        FL.setPower(power);
+
+        BR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        BL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        FR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        FL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        while (BR.isBusy() && BL.isBusy() && FR.isBusy() && FL.isBusy()) {
+            telemetry.addLine("Strafing Right");
+            telemetry.addData("BR Current", BR.getCurrentPosition());
+            telemetry.addData("BL Current", BL.getCurrentPosition());
+            telemetry.addData("FR Current", FR.getCurrentPosition());
+            telemetry.addData("FL Current", FL.getCurrentPosition());
+            telemetry.update();
+        }
+
+        BR.setPower(0);
+        BL.setPower(0);
+        FR.setPower(0);
+        FL.setPower(0);
+    }
+
+    // Function to turn robot right or left
+    private void movementRL(robotMotion action, double degree, double power) {
+        // Turning uses left and right wheels moving in opposite directions
+        if (action == robotMotion.left) {
+            // Left turn: left wheels backward, right wheels forward
+            BR.setTargetPosition((int)(BR.getCurrentPosition() + degree * cpd));
+            BL.setTargetPosition((int)(BL.getCurrentPosition() - degree * cpd));
+            FR.setTargetPosition((int)(FR.getCurrentPosition() + degree * cpd));
+            FL.setTargetPosition((int)(FL.getCurrentPosition() - degree * cpd));
+
+            BR.setPower(power);
+            BL.setPower(-power);
+            FR.setPower(power);
+            FL.setPower(-power);
+        }
+
+        if (action == robotMotion.right) {
+            // Right turn: left wheels forward, right wheels backward
+            BR.setTargetPosition((int)(BR.getCurrentPosition() - degree * cpd));
+            BL.setTargetPosition((int)(BL.getCurrentPosition() + degree * cpd));
+            FR.setTargetPosition((int)(FR.getCurrentPosition() - degree * cpd));
+            FL.setTargetPosition((int)(FL.getCurrentPosition() + degree * cpd));
+
+            BR.setPower(-power);
+            BL.setPower(power);
+            FR.setPower(-power);
+            FL.setPower(power);
+        }
+
+        // Set RUN_TO_POSITION mode for all wheels
+        BR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        BL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        FR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        FL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        // Wait until all motors finish movement
+        while (BR.isBusy() && BL.isBusy() && FR.isBusy() && FL.isBusy()) {
+            telemetry.addLine("Turning " + action.toString());
+            telemetry.addData("BR Current", BR.getCurrentPosition());
+            telemetry.addData("BL Current", BL.getCurrentPosition());
+            telemetry.addData("FR Current", FR.getCurrentPosition());
+            telemetry.addData("FL Current", FL.getCurrentPosition());
+            telemetry.update();
+        }
+
+        // Stop all motors after turning
+        BR.setPower(0);
+        BL.setPower(0);
+        FR.setPower(0);
+        FL.setPower(0);
+    }
+}
