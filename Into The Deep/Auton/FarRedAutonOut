@@ -33,8 +33,8 @@ public class FarRedAuton extends OpMode {
 
     PathState pathState;
 
-    private final Pose startPose = new Pose(85.00826556459141, 8.080122650313283, Math.toRadians(90));
-    private final Pose endPose = new Pose(85.00826556459141, 35.06759098786829, Math.toRadians(0));
+    private final Pose startPose = new Pose(58.008265564591404, 8.080122650313283, Math.toRadians(90));
+    private final Pose endPose = new Pose(58.008265564591404, 35.06759098786829, Math.toRadians(0));
     private PathChain driveStartPosEndPose;
 
     public void buildPaths() {
