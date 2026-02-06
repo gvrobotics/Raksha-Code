@@ -277,7 +277,7 @@ public class Tele5440 extends OpMode {
                 break;
 
             case INTAKE_ON:
-                if (timer.seconds() >= 0.5) {
+                if (timer.seconds() >= 0.5) { // change this value depending on the intake timing issues
                     shotsRemaining--;
                     // Stop intake
                     intake1.setVelocity(0);
@@ -318,19 +318,6 @@ public class Tele5440 extends OpMode {
             launchOn = !launchOn;
             launch.setPosition(launchOn ? 1 : 0.5);
         }
-
-//        if (gamepad1.dpadUpWasPressed()) {
-//            launch.setPosition(launch.getPosition() + 0.01);
-//        }
-//        if (gamepad1.dpadDownWasPressed()) {
-//            launch.setPosition(launch.getPosition() - 0.01);
-//        }
-//        if (gamepad1.dpadRightWasPressed()) {
-//            launch.setPosition(launch.getPosition() + 0.1);
-//        }
-//        if (gamepad1.dpadLeftWasPressed()) {
-//            launch.setPosition(launch.getPosition() - 0.1);
-//        }
 
         // ===== INTAKE DIRECTION TOGGLE (Left bumper on 2) =====
         prevLB2 = currLB2;
