@@ -1,0 +1,292 @@
+package org.firstinspires.ftc.teamcode;
+
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
+
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
+import org.firstinspires.ftc.teamcode.Odo.GoBildaPinpointDriver;
+
+@TeleOp(name = "Tele 5440", group = "A")
+public class Tele5440 extends OpMode {
+
+    public DcMotor BR, BL, FR, FL;
+    public DcMotorEx fly1, fly2, intake1, intake2;
+    public Servo push1, push2, launch;
+    GoBildaPinpointDriver odo;
+
+    private boolean intakeOn = false, prevLB1 = false, currLB1,
+            intakeDirection = false, prevLB2 = false, currLB2,
+            shooterOn = false, prevRB1 = false, currRB1, flywheelReady = false,
+            launchOn = false, prevY2 = false, currY2,
+            pushOn = false, prevA2 = false, currA2,
+            prevB = false, currB, prevX = false, currX,
+            fieldCentricMode = true, prevY = false, currY;
+
+    private int shotsRemaining = 0;
+
+    double TARGET_VELOCITY = 960;
+    private double P = 0.212, F = 12.199;
+
+    private double pushUp1 = 0.7, pushDown1 = 0.4;
+    private double pushUp2 = 0.25, pushDown2 = 0;
+
+    // ===== Launch State Machine =====
+    private enum LaunchState {
+        IDLE,
+        PUSH_DOWN,
+        PUSH_BACK,
+        INTAKE_ON
+    }
+
+    private LaunchState launchState = LaunchState.IDLE;
+    private ElapsedTime timer = new ElapsedTime();
+
+    @Override
+    public void init() {
+
+        BR = hardwareMap.get(DcMotor.class, "BR");
+        BL = hardwareMap.get(DcMotor.class, "BL");
+        FR = hardwareMap.get(DcMotor.class, "FR");
+        FL = hardwareMap.get(DcMotor.class, "FL");
+
+        fly1 = hardwareMap.get(DcMotorEx.class, "f1");
+        fly2 = hardwareMap.get(DcMotorEx.class, "f2");
+        intake1 = hardwareMap.get(DcMotorEx.class, "i1");
+        intake2 = hardwareMap.get(DcMotorEx.class, "i2");
+
+        push1 = hardwareMap.get(Servo.class, "p1");
+        push2 = hardwareMap.get(Servo.class, "p2");
+        launch = hardwareMap.get(Servo.class, "l");
+
+        odo = hardwareMap.get(GoBildaPinpointDriver.class, "odo");
+
+        BL.setDirection(DcMotorSimple.Direction.REVERSE);
+        FL.setDirection(DcMotorSimple.Direction.REVERSE);
+        fly1.setDirection(DcMotorSimple.Direction.REVERSE);
+        fly2.setDirection(DcMotorSimple.Direction.REVERSE);
+        intake1.setDirection(DcMotorSimple.Direction.FORWARD);
+        intake2.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        fly1.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        fly2.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+
+        fly1.setVelocityPIDFCoefficients(P, 0, 0, F);
+        fly2.setVelocityPIDFCoefficients(P, 0, 0, F);
+
+        BR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        BL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        FR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        FL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        fly1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        fly2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+
+        intake1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        intake2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        push1.setPosition(pushDown1);
+        push2.setPosition(pushDown2);
+        launch.setPosition(0.5);
+
+        // Odometry
+        odo.setOffsets(-4.33, -3.5, DistanceUnit.INCH);
+        odo.setEncoderResolution(
+                GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD
+        );
+        odo.setEncoderDirections(
+                GoBildaPinpointDriver.EncoderDirection.REVERSED,
+                GoBildaPinpointDriver.EncoderDirection.REVERSED
+        );
+
+        odo.resetPosAndIMU();
+        Pose2D startingPosition =
+                new Pose2D(DistanceUnit.MM, -923.925, 1601.47,
+                        AngleUnit.RADIANS, 0);
+        odo.setPosition(startingPosition);
+    }
+
+    @Override
+    public void loop() {
+
+        odo.update();
+
+        boolean autoShooting = (launchState != LaunchState.IDLE);
+
+        // ===== Drive Toggle =====
+        prevY = currY;
+        currY = gamepad1.y;
+        if (currY && !prevY) fieldCentricMode = !fieldCentricMode;
+
+        double y = -gamepad1.left_stick_y;
+        double x = -gamepad1.left_stick_x * 1.1;
+        double rx = gamepad1.right_stick_x;
+
+        double fl, fr, bl, br;
+
+        if (fieldCentricMode) {
+            Pose2D pos = odo.getPosition();
+            double heading = pos.getHeading(AngleUnit.RADIANS);
+
+            double cos = Math.cos(-heading);
+            double sin = Math.sin(-heading);
+
+            double forward = y * cos + x * sin;
+            double strafe = -y * sin + x * cos;
+
+            fl = forward + strafe + rx;
+            fr = forward - strafe - rx;
+            bl = forward - strafe + rx;
+            br = forward + strafe - rx;
+        } else {
+            fl = y + x + rx;
+            fr = y - x - rx;
+            bl = y - x + rx;
+            br = y + x - rx;
+        }
+
+        FL.setPower(fl);
+        FR.setPower(fr);
+        BL.setPower(bl);
+        BR.setPower(br);
+
+        // ===== Manual Intake (ONLY when idle) =====
+        if (!autoShooting) {
+            prevLB1 = currLB1;
+            currLB1 = gamepad1.left_bumper;
+            if (currLB1 && !prevLB1) intakeOn = !intakeOn;
+
+            double intakePower = 0;
+            if (intakeOn) intakePower = intakeDirection ? -0.4 : 0.4;
+
+            intake1.setPower(intakePower);
+            intake2.setPower(intakePower);
+        }
+
+        // ===== Shooter Toggle =====
+        prevRB1 = currRB1;
+        currRB1 = gamepad1.right_bumper;
+        if (currRB1 && !prevRB1) {
+            shooterOn = !shooterOn;
+
+            if (shooterOn) {
+                fly1.setVelocity(1500);
+                fly2.setVelocity(1500);
+            } else {
+                fly1.setVelocity(0);
+                fly2.setVelocity(0);
+                flywheelReady = false;
+            }
+        }
+
+        // Flywheel Ready Rumble
+        if (shooterOn) {
+            double avgVel =
+                    (Math.abs(fly1.getVelocity())
+                            + Math.abs(fly2.getVelocity())) / 2.0;
+
+            if (!flywheelReady && avgVel >= TARGET_VELOCITY) {
+                gamepad1.rumbleBlips(2);
+                flywheelReady = true;
+            }
+        }
+
+        // ===== Start 3-shot (X) =====
+        prevX = currX;
+        currX = gamepad1.x;
+        if (currX && !prevX && launchState == LaunchState.IDLE) {
+            shotsRemaining = 3;
+            intakeOn = false;
+            timer.reset();
+            push1.setPosition(pushUp1);
+            push2.setPosition(pushUp2);
+            launchState = LaunchState.PUSH_DOWN;
+        }
+
+        // ===== Start 1-shot (B) =====
+        prevB = currB;
+        currB = gamepad1.b;
+        if (currB && !prevB && launchState == LaunchState.IDLE) {
+            shotsRemaining = 1;
+            intakeOn = false;
+            timer.reset();
+            push1.setPosition(pushUp1);
+            push2.setPosition(pushUp2);
+            launchState = LaunchState.PUSH_DOWN;
+        }
+
+        // ===== State Machine =====
+        switch (launchState) {
+
+            case PUSH_DOWN:
+                if (timer.seconds() >= 0.2) {
+                    push1.setPosition(pushDown1);
+                    push2.setPosition(pushDown2);
+                    timer.reset();
+                    launchState = LaunchState.PUSH_BACK;
+                }
+                break;
+
+            case PUSH_BACK:
+                if (timer.seconds() >= 0.2) {
+                    intake1.setPower(0.6);
+                    intake2.setPower(0.6);
+                    timer.reset();
+                    launchState = LaunchState.INTAKE_ON;
+                }
+                break;
+
+            case INTAKE_ON:
+                if (timer.seconds() >= 0.25) {
+                    intake1.setPower(0);
+                    intake2.setPower(0);
+
+                    shotsRemaining--;
+
+                    if (shotsRemaining > 0) {
+                        push1.setPosition(pushUp1);
+                        push2.setPosition(pushUp2);
+                        timer.reset();
+                        launchState = LaunchState.PUSH_DOWN;
+                    } else {
+                        launchState = LaunchState.IDLE;
+                    }
+                }
+                break;
+
+            case IDLE:
+                break;
+        }
+
+        // ===== Gamepad2 controls =====
+        prevA2 = currA2;
+        currA2 = gamepad2.a;
+        if (!autoShooting && currA2 && !prevA2) {
+            pushOn = !pushOn;
+            push1.setPosition(pushOn ? pushUp1 : pushDown1);
+            push2.setPosition(pushOn ? pushUp2 : pushDown2);
+        }
+
+        prevY2 = currY2;
+        currY2 = gamepad2.y;
+        if (currY2 && !prevY2) {
+            launchOn = !launchOn;
+            launch.setPosition(launchOn ? 1 : 0.5);
+        }
+
+        prevLB2 = currLB2;
+        currLB2 = gamepad2.left_bumper;
+        if (currLB2 && !prevLB2) intakeDirection = !intakeDirection;
+
+        telemetry.addData("Launch State", launchState);
+        telemetry.addData("Shots Remaining", shotsRemaining);
+        telemetry.addData("Flywheel Ready", flywheelReady);
+        telemetry.update();
+    }
+}
