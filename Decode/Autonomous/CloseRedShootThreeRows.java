@@ -44,7 +44,7 @@ public class CloseRedShootThreeRows extends OpMode {
         //-----THIRD ROW-------
         DRIVE_SHOOT_TO_THIRDROW_START,
         DRIVE_THIRDROW_START_TO_END,
-        DRIVE_THIRD_ENDPOS_SHOOTPOS,
+        DRIVE_THIRD_ENDPOS_SHOOTPOS, //skip if too long, use secondRowShootPose instead
         SHOOT_THIRDROW,
         DRIVE_SHOOT_ENDPOS;
     }
