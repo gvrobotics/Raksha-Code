@@ -53,8 +53,8 @@ public class FarRedPreload extends OpMode {
         switch(pathState) {
             case DRIVE_STARTPOS_SHOOT_POS:
                 follower.followPath(driveStartPosShootPos, true);
-                shooter.fly1.setVelocity(1300);
-                shooter.fly2.setVelocity(1300);
+                shooter.fly1.setVelocity(1250);
+                shooter.fly2.setVelocity(1250);
                 setPathState(PathState.SHOOT_PRELOAD); //reset timer & make new state
                 break;
 
