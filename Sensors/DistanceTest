@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
+@TeleOp
 public class DistanceTest extends OpMode {
 
     TestBenchDistance bench = new TestBenchDistance();
@@ -33,13 +34,13 @@ public class DistanceTest extends OpMode {
     public void loop(){
         if (bench.getDistance() < 10) {
             gamepad1.rumble(1.0, 1.0, 300);
-            fly1.setVelocity(1500);
-            fly2.setVelocity(1500);
+            fly1.setPower(0.3);
+            fly2.setVelocity(0.3);
             telemetry.addData("Distance: ", bench.getDistance());
             telemetry.addData("Status: ", "FULL");
         } else {
-            fly1.setVelocity(0);
-            fly2.setVelocity(0);
+            fly1.setPower(0);
+            fly2.setPower(0);
             telemetry.addData("Distance: ", bench.getDistance());
             telemetry.addData("Status: ", "NOT FULL");
         }
