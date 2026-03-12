@@ -1,20 +1,48 @@
 package org.firstinspires.ftc.teamcode.Sensors;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 public class DistanceTest extends OpMode {
 
     TestBenchDistance bench = new TestBenchDistance();
+    public DcMotorEx fly1, fly2;
+    private double P = 0.212, F = 12.199;
 
     @Override
     public void init(){
         bench.init(hardwareMap);
 
+        fly1 = hardwareMap.get(DcMotorEx.class, "f1");
+        fly2 = hardwareMap.get(DcMotorEx.class, "f2");
+        fly1.setDirection(DcMotorSimple.Direction.REVERSE);
+        fly2.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        fly1.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        fly2.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+
+        fly1.setVelocityPIDFCoefficients(P, 0, 0, F);
+        fly2.setVelocityPIDFCoefficients(P, 0, 0, F);
+
+        fly1.setPower(0);
+        fly2.setPower(0);
     }
 
     @Override
     public void loop(){
-        telemetry.addData("Distance: ", bench.getDistance());
+        if (bench.getDistance() < 10) {
+            gamepad1.rumble(1.0, 1.0, 300);
+            fly1.setVelocity(1500);
+            fly2.setVelocity(1500);
+            telemetry.addData("Distance: ", bench.getDistance());
+            telemetry.addData("Status: ", "FULL");
+        } else {
+            fly1.setVelocity(0);
+            fly2.setVelocity(0);
+            telemetry.addData("Distance: ", bench.getDistance());
+            telemetry.addData("Status: ", "NOT FULL");
+        }
     }
 
 }
