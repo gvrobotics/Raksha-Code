@@ -1,50 +1,40 @@
 package org.firstinspires.ftc.teamcode.Sensors;
+
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
-
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 public class ColorTestingBench {
     NormalizedColorSensor colorSensor;
+    float baseRed, baseGreen, baseBlue;
 
     public enum detectedColor {
-        RED,
-        BLUE,
-        YELLOW,
-        UNKNOWN
-
+        RED, BLUE, YELLOW, UNKNOWN
     }
 
     public void init(HardwareMap hwMap) {
         colorSensor = hwMap.get(NormalizedColorSensor.class, "color_sensor;_distance");
-        //colorSensor.setGain(4); if values are too low
+
+        NormalizedRGBA base = colorSensor.getNormalizedColors();
+        baseRed   = base.red / base.alpha;
+        baseGreen = base.green / base.alpha;
+        baseBlue  = base.blue / base.alpha;
     }
 
-    public detectedColor getDetectedColor(Telemetry telemetry){
-        NormalizedRGBA colors = colorSensor.getNormalizedColors(); //return 4 values of fractional percentage (R, G, B, Alpha (brightness))
+    public boolean isSomethingDetected(Telemetry telemetry) {
+        NormalizedRGBA colors = colorSensor.getNormalizedColors();
 
-        float normRed, normGreen, normBlue;
-        normRed = colors.red / colors.alpha;
-        normGreen = colors.green / colors.alpha;
-        normBlue = colors.blue / colors.alpha;
+        float normRed   = colors.red / colors.alpha;
+        float normGreen = colors.green / colors.alpha;
+        float normBlue  = colors.blue / colors.alpha;
 
-        telemetry.addData("RED: ", normRed);
-        telemetry.addData("GREEN: ", normGreen);
-        telemetry.addData("BLUE: ", normBlue);
+        telemetry.addData("RED",   "%.3f", normRed);
+        telemetry.addData("GREEN", "%.3f", normGreen);
+        telemetry.addData("BLUE",  "%.3f", normBlue);
 
-        //TODO add if statements for specific colors added
+        float threshold = 0.1f;
 
-        /*
-        red, green, blue //do with necessary colors
-        RED =
-        GREEN =
-        BLUE =
-         */
-
-        //if statements below
-
-        return detectedColor.UNKNOWN;
+        return Math.abs(normRed - baseRed) > threshold || Math.abs(normGreen - baseGreen) > threshold || Math.abs(normBlue - baseBlue)  > threshold;
     }
-
 }
