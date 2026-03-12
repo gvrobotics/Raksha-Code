@@ -36,6 +36,8 @@ public class ColorSensorTest extends OpMode {
             fly2.setVelocity(1500);
             telemetry.addData("Status: ", "BALL DETECTED");
         } else {
+            fly1.setVelocity(0);
+            fly2.setVelocity(0);
             telemetry.addData("Status: ", "NOT FULL");
         }
     }
